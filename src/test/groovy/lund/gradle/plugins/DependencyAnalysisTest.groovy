@@ -37,4 +37,13 @@ class DependencyAnalysisTest {
         Task analyze = project.tasks.analyze as AnalyzeTask
         assertTrue(analyze.dependencyAnalyzer instanceof SourceSetScanner)
     }
+
+    @Test
+    public void shouldWorkWithScalaPluginApplied() {
+        Project project = ProjectBuilder.builder().build()
+        project.apply plugin: 'dependencyAnalysis'
+        project.apply plugin: 'scala'
+
+        assertTrue(project.tasks.analyze instanceof AnalyzeTask)
+    }
 }

@@ -1,12 +1,12 @@
 package lund.gradle.plugins.tasks
 
-
 import lund.gradle.plugins.asm.SourceSetScanner
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ConfigurationContainer
-import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.ResolvedDependency
+import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -19,6 +19,7 @@ import org.gradle.api.tasks.TaskAction
 class AnalyzeTask extends DefaultTask {
 
     SourceSetScanner dependencyAnalyzer
+    Map<File, String> dependencyArtifactsAndFilesMap
 
     AnalyzeTask() {
         this.dependencyAnalyzer = new SourceSetScanner()
@@ -30,49 +31,51 @@ class AnalyzeTask extends DefaultTask {
             throw new IllegalStateException("Project does not have the java plugin applied.")
         }
 
-        analyzeClassDependencies(project).each {
-            println(it)
+        Set<Configuration> gradleConfigurations = project.getConfigurations()
+        gradleConfigurations.each {
+            ResolutionResult result = it.getIncoming().getResolutionResult()
+            println(result.root.id.displayName)
         }
 
+        println("FILES")
+        project.configurations.each {
+            println(it.name)
+        }
+        project.configurations.each {
+            if(it.name.toLowerCase().contains("compile")) {
+                project.logger.quiet("Dependencies for configuration " + it.name)
+                Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it, it.name.toString())
+                dependencyArtifactsAndFilesMap = findModuleArtifactFiles(firstLevelDeps)
 
-        Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(project, 'compile')
-        Set<File> dependencyArtifacts = findModuleArtifactFiles(firstLevelDeps)
+                Map<File, Set<String>> fileClassMap = buildArtifactClassMap(dependencyArtifactsAndFilesMap.keySet())
+                project.logger.info "fileClassMap = $fileClassMap"
+//
+                Set<String> dependencyClasses = analyzeClassDependencies(project)
+                project.logger.info "dependencyClasses = $dependencyClasses"
+//
+                Set<String> usedArtifacts = buildUsedArtifacts(fileClassMap, dependencyClasses)
+                project.logger.info "usedArtifacts = $usedArtifacts"
+//
+                Set<String> usedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifactsAndFilesMap.values().toSet())
+                usedDeclaredArtifacts.retainAll(usedArtifacts)
+                project.logger.quiet "usedDeclaredArtifacts = $usedDeclaredArtifacts"
 
-        Map<File, Set<String>> fileClassMap = buildArtifactClassMap(dependencyArtifacts)
-        project.logger.info "fileClassMap = $fileClassMap"
+                Set<String> usedUndeclaredArtifacts = new LinkedHashSet<String>(usedArtifacts)
+                usedUndeclaredArtifacts.removeAll(dependencyArtifactsAndFilesMap.values())
+                project.logger.quiet "usedUndeclaredArtifacts = $usedUndeclaredArtifacts"
 
-        Set<String> dependencyClasses = analyzeClassDependencies(project)
-        project.logger.info "dependencyClasses = $dependencyClasses"
+                Set<String> unusedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifactsAndFilesMap.values())
+                unusedDeclaredArtifacts.removeAll(usedArtifacts)
+                project.logger.quiet "unusedDeclaredArtifacts = $unusedDeclaredArtifacts"
+            }
 
-        Set<File> usedArtifacts = buildUsedArtifacts(fileClassMap, dependencyClasses)
-        project.logger.info "usedArtifacts = $usedArtifacts"
-
-        Set<File> usedDeclaredArtifacts = new LinkedHashSet<File>(dependencyArtifacts)
-        usedDeclaredArtifacts.retainAll(usedArtifacts)
-        project.logger.info "usedDeclaredArtifacts = $usedDeclaredArtifacts"
-
-        Set<File> usedUndeclaredArtifacts = new LinkedHashSet<File>(usedArtifacts)
-        usedUndeclaredArtifacts.removeAll(dependencyArtifacts)
-        project.logger.info "usedUndeclaredArtifacts = $usedUndeclaredArtifacts"
-
-        Set<File> unusedDeclaredArtifacts = new LinkedHashSet<File>(dependencyArtifacts)
-        unusedDeclaredArtifacts.removeAll(usedArtifacts)
-        project.logger.info "unusedDeclaredArtifacts = $unusedDeclaredArtifacts"
-
-        //Now work back from the files to the artifact information
-        ConfigurationContainer configurations = project.configurations
-        def nonTestConfigurations = configurations.findAll {!it.name.contains('test')}
-        Set<ResolvedArtifact> artifacts = nonTestConfigurations*.resolvedConfiguration*.getResolvedArtifacts().unique().flatten() as Set<ResolvedArtifact>
-//        ProjectDependencyAnalysis projectDependencyAnalysis = new ProjectDependencyAnalysis(
-//                artifacts.findAll {ResolvedArtifact artifact -> artifact.file in usedDeclaredArtifacts}.unique {it.file} as Set,
-//                artifacts.findAll {ResolvedArtifact artifact -> artifact.file in usedUndeclaredArtifacts}.unique {it.file} as Set,
-//                artifacts.findAll {ResolvedArtifact artifact -> artifact.file in unusedDeclaredArtifacts}.unique {it.file} as Set)
+        }
 
     }
 
-    private Set<ResolvedDependency> getFirstLevelDependencies(Project project, String configurationName)
+    Set<ResolvedDependency> getFirstLevelDependencies(Configuration configuration, String configurationName)
     {
-        project.configurations."$configurationName".resolvedConfiguration.firstLevelModuleDependencies
+        configuration.resolvedConfiguration.firstLevelModuleDependencies
     }
 
     /**
@@ -81,7 +84,7 @@ class AnalyzeTask extends DefaultTask {
      * @return a Map of files to their classes
      * @throws IOException
      */
-    private Map<File, Set<String>> buildArtifactClassMap(Set<File> dependencyArtifacts) throws IOException
+    Map<File, Set<String>> buildArtifactClassMap(Set<File> dependencyArtifacts) throws IOException
     {
         Map<File, Set<String>> artifactClassMap = [:]
 
@@ -98,9 +101,15 @@ class AnalyzeTask extends DefaultTask {
         return artifactClassMap
     }
 
-    private Set<File> findModuleArtifactFiles(Set<ResolvedDependency> dependencies)
+    Map<File, String> findModuleArtifactFiles(Set<ResolvedDependency> dependencies)
     {
-        dependencies*.moduleArtifacts*.collect {it.file}.unique().flatten()
+        Map<File, String> artifactAndFileMap = new HashMap<>()
+        dependencies*.moduleArtifacts*.each {
+            String classifier = it.getClassifier() ? ":${it.getClassifier()}" : ""
+            ModuleVersionIdentifier identifier = it.getModuleVersion().getId()
+            artifactAndFileMap.put(it.getFile(), identifier.group + ":" + identifier.name + ":" + identifier.version + classifier + "." + it.getExtension())
+        }
+        return artifactAndFileMap
     }
 
     /**
@@ -110,15 +119,15 @@ class AnalyzeTask extends DefaultTask {
      * @param dependencyClasses all classes used directly by the project
      * @return a set of project dependencies confirmed to be used by the project
      */
-    private Set<File> buildUsedArtifacts(Map<File, Set<String>> artifactClassMap, Set<String> dependencyClasses)
+    Set<String> buildUsedArtifacts(Map<File, Set<String>> artifactClassMap, Set<String> dependencyClasses)
     {
-        Set<File> usedArtifacts = new HashSet()
+        Set<String> usedArtifacts = new HashSet()
 
         dependencyClasses.each { String className ->
             File artifact = artifactClassMap.find {it.value.contains(className)}?.key
             if (artifact)
             {
-                usedArtifacts << artifact
+                usedArtifacts << dependencyArtifactsAndFilesMap.get(artifact)
             }
         }
         return usedArtifacts
@@ -129,7 +138,7 @@ class AnalyzeTask extends DefaultTask {
      * @param project
      * @return a Set of class names
      */
-    private Collection analyzeClassDependencies(Project project)
+    Collection analyzeClassDependencies(Project project)
     {
         return project.sourceSets*.output.classesDir?.collect {File file ->
             println("Analyzing: " + file.name)
