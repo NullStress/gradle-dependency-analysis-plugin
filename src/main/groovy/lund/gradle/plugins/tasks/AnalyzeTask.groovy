@@ -1,12 +1,31 @@
 package lund.gradle.plugins.tasks
 
+import lund.gradle.plugins.ArtifactMapBuilder
 import lund.gradle.plugins.asm.SourceSetScanner
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.ResolvedDependency
-import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -20,9 +39,11 @@ class AnalyzeTask extends DefaultTask {
 
     SourceSetScanner dependencyAnalyzer
     Map<File, String> dependencyArtifactsAndFilesMap
+    ArtifactMapBuilder artifactMapBuilder
 
     AnalyzeTask() {
         this.dependencyAnalyzer = new SourceSetScanner()
+
     }
 
     @TaskAction
@@ -31,31 +52,22 @@ class AnalyzeTask extends DefaultTask {
             throw new IllegalStateException("Project does not have the java plugin applied.")
         }
 
-        Set<Configuration> gradleConfigurations = project.getConfigurations()
-        gradleConfigurations.each {
-            ResolutionResult result = it.getIncoming().getResolutionResult()
-            println(result.root.id.displayName)
-        }
-
-        println("FILES")
-        project.configurations.each {
-            println(it.name)
-        }
         project.configurations.each {
             if(it.name.toLowerCase().contains("compile")) {
                 project.logger.quiet("Dependencies for configuration " + it.name)
-                Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it, it.name.toString())
+                Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it)
                 dependencyArtifactsAndFilesMap = findModuleArtifactFiles(firstLevelDeps)
+                artifactMapBuilder = new ArtifactMapBuilder(dependencyAnalyzer, dependencyArtifactsAndFilesMap)
 
-                Map<File, Set<String>> fileClassMap = buildArtifactClassMap(dependencyArtifactsAndFilesMap.keySet())
+                Map<File, Set<String>> fileClassMap = artifactMapBuilder.buildArtifactClassMap(dependencyArtifactsAndFilesMap.keySet())
                 project.logger.info "fileClassMap = $fileClassMap"
-//
-                Set<String> dependencyClasses = analyzeClassDependencies(project)
+
+                Set<String> dependencyClasses = artifactMapBuilder.analyzeClassDependencies(project)
                 project.logger.info "dependencyClasses = $dependencyClasses"
-//
-                Set<String> usedArtifacts = buildUsedArtifacts(fileClassMap, dependencyClasses)
+
+                Set<String> usedArtifacts = artifactMapBuilder.buildUsedArtifacts(fileClassMap, dependencyClasses)
                 project.logger.info "usedArtifacts = $usedArtifacts"
-//
+
                 Set<String> usedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifactsAndFilesMap.values().toSet())
                 usedDeclaredArtifacts.retainAll(usedArtifacts)
                 project.logger.quiet "usedDeclaredArtifacts = $usedDeclaredArtifacts"
@@ -73,32 +85,9 @@ class AnalyzeTask extends DefaultTask {
 
     }
 
-    Set<ResolvedDependency> getFirstLevelDependencies(Configuration configuration, String configurationName)
+    Set<ResolvedDependency> getFirstLevelDependencies(Configuration configuration)
     {
         configuration.resolvedConfiguration.firstLevelModuleDependencies
-    }
-
-    /**
-     * Map each of the files declared on all configurations of the project to a collection of the class names they contain.
-     * @param project the project we're working on
-     * @return a Map of files to their classes
-     * @throws IOException
-     */
-    Map<File, Set<String>> buildArtifactClassMap(Set<File> dependencyArtifacts) throws IOException
-    {
-        Map<File, Set<String>> artifactClassMap = [:]
-
-        dependencyArtifacts.each { File file ->
-            if (file.name.endsWith('jar'))
-            {
-                artifactClassMap.put(file, dependencyAnalyzer.analyzeJar(file.toURI().toURL()))
-            }
-            else
-            {
-                project.logger.info "Skipping analysis of file for classes: $file"
-            }
-        }
-        return artifactClassMap
     }
 
     Map<File, String> findModuleArtifactFiles(Set<ResolvedDependency> dependencies)
@@ -112,37 +101,6 @@ class AnalyzeTask extends DefaultTask {
         return artifactAndFileMap
     }
 
-    /**
-     * Determine which of the project dependencies are used.
-     *
-     * @param artifactClassMap a map of Files to the classes they contain
-     * @param dependencyClasses all classes used directly by the project
-     * @return a set of project dependencies confirmed to be used by the project
-     */
-    Set<String> buildUsedArtifacts(Map<File, Set<String>> artifactClassMap, Set<String> dependencyClasses)
-    {
-        Set<String> usedArtifacts = new HashSet()
 
-        dependencyClasses.each { String className ->
-            File artifact = artifactClassMap.find {it.value.contains(className)}?.key
-            if (artifact)
-            {
-                usedArtifacts << dependencyArtifactsAndFilesMap.get(artifact)
-            }
-        }
-        return usedArtifacts
-    }
 
-    /**
-     * Find and analyze all class files to determine which external classes are used.
-     * @param project
-     * @return a Set of class names
-     */
-    Collection analyzeClassDependencies(Project project)
-    {
-        return project.sourceSets*.output.classesDir?.collect {File file ->
-            println("Analyzing: " + file.name)
-            dependencyAnalyzer.analyze(file.toURI().toURL())
-        }?.flatten()?.unique()
-    }
 }
