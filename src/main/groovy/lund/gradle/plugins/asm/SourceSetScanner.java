@@ -41,7 +41,7 @@ import java.util.jar.JarInputStream;
  */
 public class SourceSetScanner {
 
-    private final Set<String> dependencies;
+    private Set<String> dependencies;
 
     public SourceSetScanner() {
         dependencies = new HashSet<String>();
@@ -59,7 +59,8 @@ public class SourceSetScanner {
 
                 if ( name.endsWith( ".class" ) )
                 {
-                    scanFile(in);
+//                    scanFile(in);
+                    dependencies.add(name.replaceAll("/", "."));
                 }
             }
 
@@ -74,6 +75,7 @@ public class SourceSetScanner {
     public Set<String> analyze(URL url) {
         try {
 //            System.out.println("analyzing " + url);
+            dependencies = new HashSet<String>();
             File startDir = new File(url.toURI());
             if(!startDir.isDirectory()) {
                 return dependencies;
