@@ -21,7 +21,7 @@ class ArtifactMapBuilder {
  * @return a Map of files to their classes
  * @throws IOException
  */
-    static Set<String> findArtifactClasses(Artifact artifact) throws IOException
+    Set<String> findArtifactClasses(Artifact artifact) throws IOException
     {
         File file = artifact.getAbsoluteFile()
         if (file.name.endsWith('.jar'))
@@ -65,7 +65,7 @@ class ArtifactMapBuilder {
      * @param project
      * @return a Set of class names
      */
-    static Collection analyzeClassDependencies(Project project)
+    Collection analyzeClassDependencies(Project project)
     {
         return project.sourceSets*.output.classesDir?.collect {File file ->
             logger.debug("Analyzing: " + file.name)

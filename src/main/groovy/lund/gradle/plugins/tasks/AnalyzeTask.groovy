@@ -55,25 +55,20 @@ class AnalyzeTask extends DefaultTask {
 
         project.configurations.each {
             if(it.name.toLowerCase().contains("compile")) {
+                artifactMapBuilder = new ArtifactMapBuilder()
                 project.logger.quiet("Dependencies for configuration " + it.name)
                 Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it)
                 dependencyArtifacts = findModuleArtifactFiles(firstLevelDeps)
                 dependencyArtifacts.each {
                     Artifact artifact ->
-                        artifact.setContainedClasses(ArtifactMapBuilder.findArtifactClasses(artifact))
+                        artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
                 }
-                artifactMapBuilder = new ArtifactMapBuilder(dependencyAnalyzer)
 
-                Set<String> dependencyClasses = ArtifactMapBuilder.analyzeClassDependencies(project)
+
+                Set<String> dependencyClasses = artifactMapBuilder.analyzeClassDependencies(project)
                 project.logger.quiet "dependencyClasses = $dependencyClasses"
 
                 artifactMapBuilder.buildUsedArtifacts(dependencyArtifacts, dependencyClasses)
-//                dependencyArtifacts.each {
-//                    Artifact artifact ->
-//                        println(artifact.name)
-//                        println(artifact.containedClasses)
-//                        println(artifact.isUsed)
-//                }
                 dependencyArtifacts.retainAll {
                     Artifact artifact ->
                         artifact.isUsed
