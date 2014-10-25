@@ -1,6 +1,7 @@
 package lund.gradle.plugins
 
 import lund.gradle.plugins.asm.SourceSetScanner
+import lund.gradle.plugins.model.Artifact
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -19,78 +20,81 @@ class ArtifactMapBuilderTest {
     SourceSetScanner scanner
 
     Set<String> dependencyClasses
+    File file = new File('src/test/resources/commons-cli-1.0.jar')
+    Artifact commonsArtifact = new Artifact(file, "commons-cli:commons-cli:1.0")
 
     @Before
     public void setup() {
-        buildSourceSetScannerMock()
+
     }
 
     @After
     public void tearDown() {
         scanner = null
     }
-//
-//    @Test
-//    public void buildArtifactClassMapShouldOnlyAcceptJarFiles() {
-//        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder(scanner)
-//
-//        Set<File> files = new HashSet<>()
-//        files.add(new File('/fake.jar'))
-//        files.add(new File('/notajar'))
-//        Map result = artifactMapBuilder.findArtifactClasses(files)
-//
-//        assertEquals(1,result.size())
-//    }
 
-//    @Test
-//    public void buildUsedArtifactsShouldReturnArtifactOnMatch() {
-//        buildArtifactClassMap()
-//        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder(scanner,buildDependencyArtifactsAndFilesMap())
-//        Set<String> result = artifactMapBuilder.buildUsedArtifacts(buildArtifactClassMap(),buildMatchingDependencyClassesSet())
-//        assertEquals(1, result.size())
-//        assertEquals("fake.org:fake:1.23", result.toArray()[0])
-//    }
-//
-//    @Test
-//    public void buildUsedArtifactsShouldNotReturnArtifactIfNoMatch() {
-//        buildArtifactClassMap()
-//        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder(scanner,buildDependencyArtifactsAndFilesMap())
-//        Set<String> result = artifactMapBuilder.buildUsedArtifacts(buildArtifactClassMap(),buildNotMatchingDependencyClassesSet())
-//        assertEquals(0, result.size())
-//    }
+    @Test
+    public void findArtifactClassesShouldReturn0ForEmptyJar() {
+        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder()
 
-    private Map<File, String> buildDependencyArtifactsAndFilesMap() {
-        Map<File, String> dependencyArtifactsAndFilesMap = new HashMap<>()
-        dependencyArtifactsAndFilesMap.put(new File('/fake-1.23.jar'), "fake.org:fake:1.23")
-        return dependencyArtifactsAndFilesMap
+        Artifact artifact = new Artifact(new File('/fake-1.23.jar'), "fake.org:fake:1.23")
+
+        Set<String> result = artifactMapBuilder.findArtifactClasses(artifact)
+
+        assertEquals(0,result.size())
+    }
+
+    @Test
+    public void findArtifactClassesShouldReturn12CommonsCli() {
+        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder()
+        Set<String> result = artifactMapBuilder.findArtifactClasses(commonsArtifact)
+
+        assertEquals(20,result.size())
+    }
+
+    @Test
+    public void buildUsedArtifactsShouldReturnArtifactOnMatch() {
+        Artifact artifact = new Artifact(new File('/fake-1.23.jar'), "fake.org:fake:1.23")
+        artifact.setContainedClasses(buildMatchingClassSet())
+        Set<Artifact> artifacts = new HashSet<>()
+        artifacts.add(artifact)
+
+        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder()
+        artifactMapBuilder.buildUsedArtifacts(artifacts, buildMatchingDependencyClassesSet())
+        assertTrue(artifact.isUsed)
+    }
+
+    @Test
+    public void buildUsedArtifactsShouldNotReturnArtifactIfNoMatch() {
+        Artifact artifact = new Artifact(new File('/fake-1.23.jar'), "fake.org:fake:1.23")
+        Set<String> stringSet = new HashSet<>()
+        stringSet.add("fake.class")
+        artifact.setContainedClasses(stringSet)
+        Set<Artifact> artifacts = new HashSet<>()
+        artifacts.add(artifact)
+
+        ArtifactMapBuilder artifactMapBuilder = new ArtifactMapBuilder()
+        artifactMapBuilder.buildUsedArtifacts(artifacts, buildNotMatchingDependencyClassesSet())
+        assertFalse(artifact.isUsed)
     }
 
     private Set<String> buildMatchingDependencyClassesSet() {
         Set<String> dependencySetThatShouldMatch = new HashSet<>()
-        dependencySetThatShouldMatch.add("fake.class")
+        dependencySetThatShouldMatch.add("fake")
         return dependencySetThatShouldMatch
     }
 
     private Set<String> buildNotMatchingDependencyClassesSet() {
         Set<String> dependencySetThatShouldNotMatch = new HashSet<>()
-        dependencySetThatShouldNotMatch.add("ShouldNotMatch.class")
+        dependencySetThatShouldNotMatch.add("ShouldNotMatch")
         return dependencySetThatShouldNotMatch
     }
 
-    private Map<File, Set<String>> buildArtifactClassMap () {
-        Map<File, Set<String>> artifactClassMap = new HashMap()
-        File testFile = new File('/fake-1.23.jar')
+    private Set<String> buildMatchingClassSet() {
         Set<String> stringSet = new HashSet<>()
         stringSet.add("fake.class")
         stringSet.add("more.fake.class")
-        artifactClassMap.put(testFile, stringSet)
-        return artifactClassMap
+        return stringSet
     }
 
-    private void buildSourceSetScannerMock() {
-        scanner = mock(SourceSetScanner.class)
-        Set<String> mockedStringResponse = new HashSet<>()
-        mockedStringResponse.add("Mocked.class")
-        when(scanner.analyzeJar(any() as URL)).thenReturn(mockedStringResponse)
-    }
 }

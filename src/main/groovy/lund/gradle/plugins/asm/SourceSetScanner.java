@@ -59,7 +59,6 @@ public class SourceSetScanner {
 
                 if ( name.endsWith( ".class" ) )
                 {
-//                    scanFile(in);
                     dependencies.add(name.replaceAll("/", "."));
                 }
             }
@@ -74,7 +73,6 @@ public class SourceSetScanner {
 
     public Set<String> analyze(URL url) {
         try {
-//            System.out.println("analyzing " + url);
             dependencies = new HashSet<String>();
             File startDir = new File(url.toURI());
             if(!startDir.isDirectory()) {
@@ -82,7 +80,6 @@ public class SourceSetScanner {
             }
             Collection<File> files = FileUtils.listFiles(startDir, new String[]{"class"}, true);
             for(File file : files) {
-//                System.out.println("File to be scanned: " + file.getName());
                 scanFile(FileUtils.openInputStream(file));
             }
         } catch (URISyntaxException e) {

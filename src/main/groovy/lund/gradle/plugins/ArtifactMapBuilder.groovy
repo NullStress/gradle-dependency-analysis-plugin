@@ -15,12 +15,6 @@ import org.slf4j.LoggerFactory
 class ArtifactMapBuilder {
     Logger logger = LoggerFactory.getLogger('gradle-logger')
 
-/**
- * Map each of the files declared on all configurations of the project to a collection of the class names they contain.
- * @param project the project we're working on
- * @return a Map of files to their classes
- * @throws IOException
- */
     Set<String> findArtifactClasses(Artifact artifact) throws IOException
     {
         File file = artifact.getAbsoluteFile()
@@ -36,13 +30,6 @@ class ArtifactMapBuilder {
 
     }
 
-    /**
-     * Determine which of the project dependencies are used.
-     *
-     * @param artifactClassMap a map of Files to the classes they contain
-     * @param dependencyClasses all classes used directly by the project
-     * @return a set of project dependencies confirmed to be used by the project
-     */
     void buildUsedArtifacts(Set<Artifact> artifacts, Set<String> dependencyClasses)
     {
 
@@ -60,11 +47,6 @@ class ArtifactMapBuilder {
         }
     }
 
-    /**
-     * Find and analyze all class files to determine which external classes are used.
-     * @param project
-     * @return a Set of class names
-     */
     Collection analyzeClassDependencies(Project project)
     {
         return project.sourceSets*.output.classesDir?.collect {File file ->

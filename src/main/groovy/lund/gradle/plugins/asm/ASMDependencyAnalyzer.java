@@ -72,7 +72,6 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
     }
     public FieldVisitor visitField(int access, String name, String desc,
                                    String signature, Object value) {
-//        System.out.println(" " + desc + " " + name);
         if ( signature == null )
         {
             addDesc( desc );
@@ -90,7 +89,6 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
     }
     public MethodVisitor visitMethod(int access, String name,
                                      String desc, String signature, String[] exceptions) {
-//        System.out.println(" " + name + desc);
         if ( signature == null )
         {
             addMethodDesc( desc );
@@ -104,7 +102,6 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
         return null;
     }
     public void visitEnd() {
-//        System.out.println("}");
     }
 
     public Set<String> getClasses() {

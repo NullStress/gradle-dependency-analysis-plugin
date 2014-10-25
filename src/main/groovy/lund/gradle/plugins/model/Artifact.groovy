@@ -31,10 +31,6 @@ class Artifact {
         return containedClasses
     }
 
-    void setName(String name) {
-        this.name = name
-    }
-
     void setContainedClasses(Set<String> containedClasses) {
         this.containedClasses = containedClasses
     }
