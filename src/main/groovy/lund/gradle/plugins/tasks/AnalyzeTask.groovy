@@ -60,28 +60,37 @@ class AnalyzeTask extends DefaultTask {
                 Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it)
                 dependencyArtifacts = findModuleArtifactFiles(firstLevelDeps)
                 dependencyArtifacts.each {
+                    println(it.name)
+                }
+                dependencyArtifacts.each {
                     Artifact artifact ->
                         artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
                 }
 
 
                 Set<String> dependencyClasses = artifactMapBuilder.analyzeClassDependencies(project)
-                project.logger.quiet "dependencyClasses = $dependencyClasses"
+                project.logger.info "dependencyClasses = $dependencyClasses"
 
                 artifactMapBuilder.buildUsedArtifacts(dependencyArtifacts, dependencyClasses)
-                dependencyArtifacts.retainAll {
+                Set<Artifact> usedArtifacts = dependencyArtifacts.findAll {
                     Artifact artifact ->
                         artifact.isUsed
                 }
-                project.logger.quiet "usedArtifacts = $dependencyArtifacts"
+                project.logger.quiet "usedArtifacts"
+                usedArtifacts.each {project.logger.quiet(it.name)}
+
+                Set<Artifact> unusedArtifacts = dependencyArtifacts.findAll {
+                    Artifact artifact ->
+                        !artifact.isUsed
+                }
+                project.logger.quiet "unusedArtifacts"
+                unusedArtifacts.each {project.logger.quiet(it.name)}
 
 //                Set<String> usedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifacts.values().toSet())
 //                usedDeclaredArtifacts.retainAll(usedArtifacts)
 //                project.logger.quiet "usedDeclaredArtifacts = $usedDeclaredArtifacts"
-//
-//                Set<String> usedUndeclaredArtifacts = new LinkedHashSet<String>(usedArtifacts)
-//                usedUndeclaredArtifacts.removeAll(dependencyArtifacts.values())
-//                project.logger.quiet "usedUndeclaredArtifacts = $usedUndeclaredArtifacts"
+////
+
 //
 //                Set<String> unusedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifacts.values())
 //                unusedDeclaredArtifacts.removeAll(usedArtifacts)
