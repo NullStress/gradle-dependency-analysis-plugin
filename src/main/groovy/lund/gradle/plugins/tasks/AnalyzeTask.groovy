@@ -26,6 +26,7 @@ import org.gradle.api.DefaultTask
 
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleVersionIdentifier
+import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.tasks.TaskAction
 
@@ -40,6 +41,7 @@ class AnalyzeTask extends DefaultTask {
 
     SourceSetScanner dependencyAnalyzer
     Set<Artifact> dependencyArtifacts
+    Set<Artifact> transitiveArtifacts
     ArtifactMapBuilder artifactMapBuilder
 
     AnalyzeTask() {
@@ -58,11 +60,20 @@ class AnalyzeTask extends DefaultTask {
                 artifactMapBuilder = new ArtifactMapBuilder()
                 project.logger.quiet("Dependencies for configuration " + it.name)
                 Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it)
+                Set<ResolvedDependency> transitiveDeps = getTransitiveDependencies(firstLevelDeps)
                 dependencyArtifacts = findModuleArtifactFiles(firstLevelDeps)
+                transitiveArtifacts = findModuleArtifactFiles(transitiveDeps)
                 dependencyArtifacts.each {
-                    println(it.name)
+                    logger.debug("declared artifact: " + it.name)
+                }
+                transitiveArtifacts.each {
+                    logger.debug("transitive artifact: " + it.name)
                 }
                 dependencyArtifacts.each {
+                    Artifact artifact ->
+                        artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
+                }
+                transitiveArtifacts.each {
                     Artifact artifact ->
                         artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
                 }
@@ -86,15 +97,20 @@ class AnalyzeTask extends DefaultTask {
                 project.logger.quiet "unusedArtifacts"
                 unusedArtifacts.each {project.logger.quiet(it.name)}
 
-//                Set<String> usedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifacts.values().toSet())
-//                usedDeclaredArtifacts.retainAll(usedArtifacts)
-//                project.logger.quiet "usedDeclaredArtifacts = $usedDeclaredArtifacts"
-////
+                artifactMapBuilder.buildUsedArtifacts(transitiveArtifacts, dependencyClasses)
+                Set<Artifact> usedTransitiveArtifacts = transitiveArtifacts.findAll {
+                    Artifact artifact ->
+                        artifact.isUsed
+                }
+                project.logger.quiet "usedUndeclaredArtifacts"
+                usedTransitiveArtifacts.each {project.logger.quiet(it.name)}
 
-//
-//                Set<String> unusedDeclaredArtifacts = new LinkedHashSet<String>(dependencyArtifacts.values())
-//                unusedDeclaredArtifacts.removeAll(usedArtifacts)
-//                project.logger.quiet "unusedDeclaredArtifacts = $unusedDeclaredArtifacts"
+                Set<Artifact> unusedTransitiveArtifacts = transitiveArtifacts.findAll {
+                    Artifact artifact ->
+                        !artifact.isUsed
+                }
+                project.logger.quiet "unusedUndeclaredArtifacts"
+                unusedTransitiveArtifacts.each {project.logger.quiet(it.name)}
             }
 
         }
@@ -104,6 +120,33 @@ class AnalyzeTask extends DefaultTask {
     Set<ResolvedDependency> getFirstLevelDependencies(Configuration configuration)
     {
         configuration.resolvedConfiguration.firstLevelModuleDependencies
+    }
+
+    Set<ResolvedDependency> getTransitiveDependencies(Set<ResolvedDependency> firstLevelModuleDependencies)
+    {
+        Set<ResolvedDependency> transitiveDeps = new HashSet<>()
+        firstLevelModuleDependencies.each {
+            ResolvedDependency resolvedDependency ->
+                transitiveDeps.addAll(intersectionOfResolvedDependencySets(transitiveDeps, resolvedDependency.children))
+        } as Set<ResolvedDependency>
+        return transitiveDeps
+    }
+
+    Set<ResolvedDependency> intersectionOfResolvedDependencySets(Set<ResolvedDependency> transitiveCollection ,Set<ResolvedDependency> children) {
+        Set<ResolvedDependency> toBeAdded = new HashSet<>()
+        Set<String> names =  new HashSet<>()
+        transitiveCollection.each{
+            names.add(it.name)
+        }
+        children.each {
+            logger.debug("names = $names")
+            if(!names.contains(it.name)){
+                logger.debug("adding " + it.name)
+                toBeAdded.add(it)
+                names.add(it.name)
+            }
+        }
+        return toBeAdded
     }
 
     Set<Artifact> findModuleArtifactFiles(Set<ResolvedDependency> dependencies)
@@ -116,7 +159,5 @@ class AnalyzeTask extends DefaultTask {
         }
         return artifactSet
     }
-
-
 
 }
