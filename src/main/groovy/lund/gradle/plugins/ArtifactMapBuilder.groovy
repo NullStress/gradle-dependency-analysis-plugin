@@ -15,8 +15,7 @@ import org.slf4j.LoggerFactory
 class ArtifactMapBuilder {
     Logger logger = LoggerFactory.getLogger('gradle-logger')
 
-    Set<String> findArtifactClasses(Artifact artifact) throws IOException
-    {
+    Set<String> findArtifactClasses(Artifact artifact) throws IOException {
         File file = artifact.getAbsoluteFile()
         if (file.name.endsWith('.jar'))
         {
@@ -30,8 +29,7 @@ class ArtifactMapBuilder {
 
     }
 
-    void buildUsedArtifacts(Set<Artifact> artifacts, Set<String> dependencyClasses)
-    {
+    void buildUsedArtifacts(Set<Artifact> artifacts, Set<String> dependencyClasses) {
 
         dependencyClasses.each { String className ->
             logger.debug("Checking for classname: *$className*")
@@ -52,7 +50,7 @@ class ArtifactMapBuilder {
         return project.sourceSets*.output.classesDir?.collect {File file ->
             logger.debug("Analyzing: " + file.name)
             def scanner  = new SourceSetScanner()
-            scanner.analyze(file.toURI().toURL())
+            scanner.analyze(file.toURI())
         }?.flatten()?.unique()
     }
 }

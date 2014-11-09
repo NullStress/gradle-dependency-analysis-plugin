@@ -25,6 +25,7 @@ import org.objectweb.asm.ClassReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
@@ -71,10 +72,10 @@ public class SourceSetScanner {
         return dependencies;
     }
 
-    public Set<String> analyze(URL url) {
+    public Set<String> analyze(URI uri) {
         try {
             dependencies = new HashSet<String>();
-            File startDir = new File(url.toURI());
+            File startDir = new File(uri);
             if(!startDir.isDirectory()) {
                 return dependencies;
             }
@@ -82,8 +83,6 @@ public class SourceSetScanner {
             for(File file : files) {
                 scanFile(FileUtils.openInputStream(file));
             }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

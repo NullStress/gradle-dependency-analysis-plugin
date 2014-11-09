@@ -78,6 +78,8 @@ class ArtifactMapBuilderTest {
         assertFalse(artifact.isUsed)
     }
 
+
+
     private Set<String> buildMatchingDependencyClassesSet() {
         Set<String> dependencySetThatShouldMatch = new HashSet<>()
         dependencySetThatShouldMatch.add("fake")

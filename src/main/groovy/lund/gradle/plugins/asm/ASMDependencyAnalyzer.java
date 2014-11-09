@@ -24,12 +24,6 @@ import org.objectweb.asm.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Kristian
- * Date: 10.07.14
- * Time: 20:55
- */
 public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
 
     private Set<String> classes;
