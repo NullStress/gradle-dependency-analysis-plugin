@@ -1,12 +1,11 @@
 gradle-dependency-analysis-plugin
 =================================
 
-A gradle dependency analysis plugin where much of the code is a port of the maven dependency plugin to gradle. Currently a work in progress project.
-The roadmap ahead is to improve the test coverage and give better output of the results.
+A gradle dependency analysis plugin inspired by the maven dependency plugin and https://gist.github.com/kellyrob99/4334483.
 
 Usage:
 
-Download the project and install to maven local with: gradle install
+Download the project and install to maven local repo with: gradle install
 
 Include the following in the top of your project:
 
