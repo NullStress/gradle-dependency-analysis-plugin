@@ -4,6 +4,8 @@ import lund.gradle.plugins.ArtifactMapBuilder
 import lund.gradle.plugins.asm.SourceSetScanner
 import lund.gradle.plugins.model.Artifact
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.GradleScriptException
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -111,6 +113,9 @@ class AnalyzeTask extends DefaultTask {
                 }
                 project.logger.quiet "unusedUndeclaredArtifacts"
                 unusedTransitiveArtifacts.each {project.logger.quiet(it.name)}
+                if(!unusedArtifacts.empty) {
+                    throw new GradleException("The project has unused declared artifacts")
+                }
             }
 
         }
