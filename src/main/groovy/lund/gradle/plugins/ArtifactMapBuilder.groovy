@@ -17,20 +17,15 @@ class ArtifactMapBuilder {
 
     Set<String> findArtifactClasses(Artifact artifact) throws IOException {
         File file = artifact.getAbsoluteFile()
-        if (file.name.endsWith('.jar'))
-        {
+        if (file.name.endsWith('.jar')) {
             def scanner  = new SourceSetScanner()
             return scanner.analyzeJar(file.toURI().toURL())
-        }
-        else
-        {
+        } else {
             return null;
         }
-
     }
 
     void buildUsedArtifacts(Set<Artifact> artifacts, Set<String> dependencyClasses) {
-
         dependencyClasses.each { String className ->
             logger.debug("Checking for classname: *$className*")
 
@@ -45,8 +40,7 @@ class ArtifactMapBuilder {
         }
     }
 
-    Collection analyzeClassDependencies(Project project)
-    {
+    Collection analyzeClassDependencies(Project project) {
         return project.sourceSets*.output.classesDir?.collect {File file ->
             logger.debug("Analyzing: " + file.name)
             def scanner  = new SourceSetScanner()

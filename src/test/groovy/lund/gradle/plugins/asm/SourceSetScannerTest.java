@@ -23,9 +23,7 @@ public class SourceSetScannerTest {
     public void sourceSetScannerShouldAddScanResultsToDependencies() throws IOException {
         SourceSetScanner sourceSetScanner = new SourceSetScanner();
         File testClass = new File("src/test/resources/test.class");
-        sourceSetScanner.scanFile(FileUtils.openInputStream(testClass));
-
-        Set<String> dependencies = sourceSetScanner.getDependencies();
+        Set<String> dependencies  = sourceSetScanner.scanFile(FileUtils.openInputStream(testClass));
 
         assertEquals(1, dependencies.size());
         assertTrue(dependencies.contains("javax.xml.stream.FactoryConfigurationError"));

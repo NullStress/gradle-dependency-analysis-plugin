@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
@@ -42,46 +41,36 @@ import java.util.jar.JarInputStream;
  */
 public class SourceSetScanner {
 
-    private Set<String> dependencies;
-
-    public SourceSetScanner() {
-        dependencies = new HashSet<String>();
-    }
-
     public Set<String> analyzeJar(URL url) {
+        Set<String> dependencies = new HashSet<String>();
         try {
-            JarInputStream in = new JarInputStream( url.openStream() );
+            JarInputStream in = new JarInputStream(url.openStream());
+            JarEntry entry;
 
-            JarEntry entry = null;
-
-            while ( ( entry = in.getNextJarEntry() ) != null )
-            {
+            while (( entry = in.getNextJarEntry()) != null ) {
                 String name = entry.getName();
 
-                if ( name.endsWith( ".class" ) )
-                {
+                if (name.endsWith( ".class" )){
                     dependencies.add(name.replaceAll("/", "."));
                 }
             }
-
             in.close();
         } catch (IOException e){
             e.printStackTrace();
         }
-
         return dependencies;
     }
 
     public Set<String> analyze(URI uri) {
+        Set<String> dependencies = new HashSet<String>();
         try {
-            dependencies = new HashSet<String>();
             File startDir = new File(uri);
             if(!startDir.isDirectory()) {
                 return dependencies;
             }
             Collection<File> files = FileUtils.listFiles(startDir, new String[]{"class"}, true);
             for(File file : files) {
-                scanFile(FileUtils.openInputStream(file));
+                dependencies.addAll(scanFile(FileUtils.openInputStream(file)));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -89,31 +78,24 @@ public class SourceSetScanner {
         return dependencies;
     }
 
-
-    public Set<String> getDependencies() {
-        return dependencies;
-    }
-
-    protected void scanFile(InputStream inputStream){
-        try
-        {
+    protected Set<String> scanFile(InputStream inputStream){
+        Set<String> dependencies = new HashSet<String>();
+        try {
             ClassReader reader = new ClassReader(inputStream);
             ASMDependencyAnalyzer visitor = new ASMDependencyAnalyzer();
 
             reader.accept( visitor, 0 );
-
             dependencies.addAll( visitor.getClasses() );
         }
-        catch ( IOException exception )
-        {
+        catch (IOException exception) {
             exception.printStackTrace();
         }
-        catch ( IndexOutOfBoundsException e )
-        {
+        catch (IndexOutOfBoundsException e) {
             // some bug inside ASM causes an IOB exception. Log it and move on?
             // this happens when the class isn't valid.
 //            System.out.println( "Unable to process: stream" );
         }
+        return dependencies;
     }
 
 

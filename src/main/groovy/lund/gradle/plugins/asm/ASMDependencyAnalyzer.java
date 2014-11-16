@@ -36,21 +36,20 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
 
     public void visit(int version, int access, String name,
                       String signature, String superName, String[] interfaces) {
-//        System.out.println(name + " extends " + superName + " {");
-        if ( signature == null )
-        {
+        if (signature == null) {
             addName( superName );
             addNames( interfaces );
         }
-        else
-        {
+        else {
             addSignature( signature );
         }
     }
     public void visitSource(String source, String debug) {
     }
+
     public void visitOuterClass(String owner, String name, String desc) {
     }
+
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         addDesc( desc );
         return null;
@@ -58,38 +57,31 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
 
     @Override
     public void visitAttribute(Attribute attribute) {
-
     }
 
     public void visitInnerClass(String name, String outerName,
                                 String innerName, int access) {
     }
+
     public FieldVisitor visitField(int access, String name, String desc,
                                    String signature, Object value) {
-        if ( signature == null )
-        {
+        if (signature == null) {
             addDesc( desc );
-        }
-        else
-        {
+        } else {
             addTypeSignature( signature );
         }
 
-        if ( value instanceof Type )
-        {
+        if (value instanceof Type) {
             addType( (Type) value );
         }
         return null;
     }
     public MethodVisitor visitMethod(int access, String name,
                                      String desc, String signature, String[] exceptions) {
-        if ( signature == null )
-        {
+        if (signature == null) {
             addMethodDesc( desc );
-        }
-        else
-        {
-            addSignature( signature );
+        } else {
+            addSignature(signature);
         }
 
         addNames( exceptions );
@@ -106,14 +98,12 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
 
     private void addName( String name )
     {
-        if ( name == null )
-        {
+        if (name == null) {
             return;
         }
 
         // decode arrays
-        if ( name.startsWith( "[L" ) && name.endsWith( ";" ) )
-        {
+        if (name.startsWith( "[L" ) && name.endsWith( ";" )) {
             name = name.substring( 2, name.length() - 1 );
         }
 
@@ -123,40 +113,31 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
         classes.add( name );
     }
 
-    private void addNames( final String[] names )
-    {
-        if ( names == null )
-        {
+    private void addNames(final String[] names) {
+        if (names == null) {
             return;
         }
 
-        for ( String name : names )
-        {
+        for (String name : names) {
             addName( name );
         }
     }
 
-    private void addDesc( final String desc )
-    {
+    private void addDesc(final String desc) {
         addType( Type.getType( desc ) );
     }
 
-    private void addMethodDesc( final String desc )
-    {
-        addType( Type.getReturnType( desc ) );
+    private void addMethodDesc(final String desc) {
+        addType(Type.getReturnType(desc));
+        Type[] types = Type.getArgumentTypes(desc);
 
-        Type[] types = Type.getArgumentTypes( desc );
-
-        for ( Type type : types )
-        {
-            addType( type );
+        for (Type type : types) {
+            addType(type);
         }
     }
 
-    private void addType( final Type t )
-    {
-        switch ( t.getSort() )
-        {
+    private void addType(final Type t) {
+        switch (t.getSort()) {
             case Type.ARRAY:
                 addType( t.getElementType() );
                 break;
@@ -167,18 +148,14 @@ public class ASMDependencyAnalyzer extends ClassVisitor implements Opcodes {
         }
     }
 
-    private void addSignature( final String signature )
-    {
-        if ( signature != null )
-        {
+    private void addSignature(final String signature) {
+        if (signature != null) {
 //            new SignatureReader( signature ).accept( this );
         }
     }
 
-    private void addTypeSignature( final String signature )
-    {
-        if ( signature != null )
-        {
+    private void addTypeSignature(final String signature) {
+        if (signature != null) {
 //            new SignatureReader( signature ).acceptType( this );
         }
     }
