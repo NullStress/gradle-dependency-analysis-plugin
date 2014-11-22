@@ -42,8 +42,6 @@ import org.gradle.api.tasks.TaskAction
 class AnalyzeTask extends DefaultTask {
 
     SourceSetScanner dependencyAnalyzer
-    Set<Artifact> dependencyArtifacts
-    Set<Artifact> transitiveArtifacts
     ArtifactMapBuilder artifactMapBuilder
 
     AnalyzeTask() {
@@ -63,63 +61,53 @@ class AnalyzeTask extends DefaultTask {
                 project.logger.quiet("Dependencies for configuration " + it.name)
                 Set<ResolvedDependency> firstLevelDeps = getFirstLevelDependencies(it)
                 Set<ResolvedDependency> transitiveDeps = getTransitiveDependencies(firstLevelDeps)
-                dependencyArtifacts = findModuleArtifactFiles(firstLevelDeps)
-                transitiveArtifacts = findModuleArtifactFiles(transitiveDeps)
-                dependencyArtifacts.each {
-                    logger.debug("declared artifact: " + it.name)
-                }
-                transitiveArtifacts.each {
-                    logger.debug("transitive artifact: " + it.name)
-                }
-                dependencyArtifacts.each {
-                    Artifact artifact ->
-                        artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
-                }
-                transitiveArtifacts.each {
-                    Artifact artifact ->
-                        artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
-                }
 
+                Set<Artifact> dependencyArtifacts = findModuleArtifactFiles(firstLevelDeps)
+                Set<Artifact> transitiveDependencyArtifacts = findModuleArtifactFiles(transitiveDeps)
 
-                Set<String> dependencyClasses = artifactMapBuilder.analyzeClassDependencies(project)
-                project.logger.info "dependencyClasses = $dependencyClasses"
+                Set<Artifact> usedArtifacts = resolveArtifacts(dependencyArtifacts, "Declared")
+                Set<Artifact> usedTransitiveArtifacts = resolveArtifacts(transitiveDependencyArtifacts, "Transitive")
 
-                artifactMapBuilder.buildUsedArtifacts(dependencyArtifacts, dependencyClasses)
-                Set<Artifact> usedArtifacts = dependencyArtifacts.findAll {
-                    Artifact artifact ->
-                        artifact.isUsed
-                }
-                project.logger.quiet "usedArtifacts"
-                usedArtifacts.each {project.logger.quiet(it.name)}
+                Set<Artifact> unusedArtifacts = findUnusedArtifact(dependencyArtifacts, "Declared")
+                Set<Artifact> unusedTransitiveArtifacts = findUnusedArtifact(transitiveDependencyArtifacts, "Transitive")
 
-                Set<Artifact> unusedArtifacts = dependencyArtifacts.findAll {
-                    Artifact artifact ->
-                        !artifact.isUsed
-                }
-                project.logger.quiet "unusedArtifacts"
-                unusedArtifacts.each {project.logger.quiet(it.name)}
-
-                artifactMapBuilder.buildUsedArtifacts(transitiveArtifacts, dependencyClasses)
-                Set<Artifact> usedTransitiveArtifacts = transitiveArtifacts.findAll {
-                    Artifact artifact ->
-                        artifact.isUsed
-                }
-                project.logger.quiet "usedUndeclaredArtifacts"
-                usedTransitiveArtifacts.each {project.logger.quiet(it.name)}
-
-                Set<Artifact> unusedTransitiveArtifacts = transitiveArtifacts.findAll {
-                    Artifact artifact ->
-                        !artifact.isUsed
-                }
-                project.logger.quiet "unusedUndeclaredArtifacts"
-                unusedTransitiveArtifacts.each {project.logger.quiet(it.name)}
                 if(!unusedArtifacts.empty) {
                     throw new GradleException("The project has unused declared artifacts")
                 }
+
             }
 
         }
+    }
 
+    Set<Artifact> findUnusedArtifact(Set<Artifact> artifacts, String typeOfArtifactSet) {
+        Set<Artifact> unusedArtifacts = artifacts.findAll {
+            Artifact artifact ->
+                !artifact.isUsed
+        }
+        project.logger.quiet "unused$typeOfArtifactSet Artifacts"
+        unusedArtifacts.each {project.logger.quiet(it.name)}
+        return unusedArtifacts
+    }
+
+    Set<Artifact> resolveArtifacts(Set<Artifact>  dependencyArtifacts, String typeOfArtifactSet) {
+        dependencyArtifacts.each {
+            Artifact artifact ->
+                artifact.setContainedClasses(artifactMapBuilder.findArtifactClasses(artifact))
+        }
+
+        Set<String> dependencyClasses = artifactMapBuilder.analyzeClassDependencies(project)
+        project.logger.info "dependencyClasses = $dependencyClasses"
+
+        artifactMapBuilder.buildUsedArtifacts(dependencyArtifacts, dependencyClasses)
+        Set<Artifact> usedArtifacts = dependencyArtifacts.findAll {
+            Artifact artifact ->
+                artifact.isUsed
+        }
+        project.logger.quiet "used$typeOfArtifactSet Artifacts"
+        usedArtifacts.each {project.logger.quiet(it.name)}
+
+        return usedArtifacts
     }
 
     Set<ResolvedDependency> getFirstLevelDependencies(Configuration configuration)
