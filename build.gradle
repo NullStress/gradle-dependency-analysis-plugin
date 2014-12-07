@@ -16,10 +16,7 @@ repositories {
 dependencies {
     compile localGroovy()
     compile gradleApi()
-    compile 'log4j:log4j:1.2.4'
-    compile 'commons-lang:commons-lang:2.3'
     compile 'org.ow2.asm:asm:4.2'
-    compile 'commons-io:commons-io:2.4'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-core:1.9.5'
