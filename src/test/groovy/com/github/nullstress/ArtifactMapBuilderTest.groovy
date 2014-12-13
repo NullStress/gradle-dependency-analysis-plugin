@@ -1,12 +1,11 @@
-package lund.gradle.plugins
+package com.github.nullstress
 
-import lund.gradle.plugins.asm.SourceSetScanner
-import lund.gradle.plugins.model.Artifact
+import com.github.nullstress.asm.SourceSetScanner
+import com.github.nullstress.model.Artifact
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 /**

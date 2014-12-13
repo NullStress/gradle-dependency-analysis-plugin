@@ -1,7 +1,7 @@
-package lund.gradle.plugins
+package com.github.nullstress
 
-import lund.gradle.plugins.asm.SourceSetScanner
-import lund.gradle.plugins.tasks.AnalyzeTask
+import com.github.nullstress.asm.SourceSetScanner
+import com.github.nullstress.tasks.AnalyzeTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder

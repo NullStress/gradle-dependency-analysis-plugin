@@ -1,6 +1,6 @@
-package lund.gradle.plugins
+package com.github.nullstress
 
-import lund.gradle.plugins.model.Artifact
+import com.github.nullstress.model.Artifact
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultResolvedDependency

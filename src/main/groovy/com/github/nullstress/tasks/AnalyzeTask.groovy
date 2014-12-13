@@ -1,12 +1,11 @@
-package lund.gradle.plugins.tasks
+package com.github.nullstress.tasks
 
-import lund.gradle.plugins.ArtifactMapBuilder
-import lund.gradle.plugins.ArtifactResolver
-import lund.gradle.plugins.asm.SourceSetScanner
-import lund.gradle.plugins.model.Artifact
+import com.github.nullstress.ArtifactMapBuilder
+import com.github.nullstress.ArtifactResolver
+import com.github.nullstress.asm.SourceSetScanner
+import com.github.nullstress.model.Artifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.GradleScriptException
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -29,7 +28,6 @@ import org.gradle.api.GradleScriptException
 
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.tasks.TaskAction
 

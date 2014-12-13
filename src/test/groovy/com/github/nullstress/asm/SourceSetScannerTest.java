@@ -1,6 +1,5 @@
-package lund.gradle.plugins.asm;
+package com.github.nullstress.asm;
 
-import lund.gradle.plugins.asm.SourceSetScanner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 

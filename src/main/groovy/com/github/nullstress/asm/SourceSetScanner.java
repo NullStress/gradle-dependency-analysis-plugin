@@ -1,4 +1,4 @@
-package lund.gradle.plugins.asm;
+package com.github.nullstress.asm;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

@@ -1,9 +1,18 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
+    }
+}
+apply plugin: 'com.jfrog.bintray'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'maven'
 
-group = 'org.lund.gradle'
-version = '1.0'
+group = 'com.github.nullstress'
+version = '1.0.1'
 
 def compatibilityVersion = 1.6
 sourceCompatibility = compatibilityVersion
@@ -17,6 +26,7 @@ dependencies {
     compile localGroovy()
     compile gradleApi()
     compile 'org.ow2.asm:asm:4.2'
+    compile 'commons-io:commons-io:2.4'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-core:1.9.5'
@@ -25,6 +35,33 @@ dependencies {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
+}
+
+bintray {
+    user = 'nullstress'
+    key = '7612fe6ad55731712d1a4cd58af79e8309c0541e'
+
+    configurations = ['archives']
+
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = true //If version should be auto published after an upload
+    pkg {
+        repo = 'plugin'
+        name = 'Dependency-analyzer'
+        desc = 'what a fantastic package indeed!'
+        websiteUrl = 'https://github.com/NullStress/gradle-dependency-analysis-plugin'
+        issueTrackerUrl = 'https://github.com/NullStress/gradle-dependency-analysis-plugin/issues'
+        vcsUrl = 'https://github.com/NullStress/gradle-dependency-analysis-plugin.git'
+        licenses = ['Apache-2.0']
+        labels = ['gradle','dependency']
+        publicDownloadNumbers = true
+
+        //Optional version descriptor
+        version {
+            name = '1.0.0' //Bintray logical version name
+            vcsTag = '1.0.0'
+        }
+    }
 }
 
 

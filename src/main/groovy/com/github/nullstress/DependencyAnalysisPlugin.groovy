@@ -1,4 +1,4 @@
-package lund.gradle.plugins
+package com.github.nullstress
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,7 +19,7 @@ package lund.gradle.plugins
  * under the License.
  */
 
-import lund.gradle.plugins.tasks.AnalyzeTask
+import com.github.nullstress.tasks.AnalyzeTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

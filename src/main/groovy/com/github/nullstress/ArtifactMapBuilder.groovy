@@ -1,7 +1,7 @@
-package lund.gradle.plugins
+package com.github.nullstress
 
-import lund.gradle.plugins.asm.SourceSetScanner
-import lund.gradle.plugins.model.Artifact
+import com.github.nullstress.asm.SourceSetScanner
+import com.github.nullstress.model.Artifact
 import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

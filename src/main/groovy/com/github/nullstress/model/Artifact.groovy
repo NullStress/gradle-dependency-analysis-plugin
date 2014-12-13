@@ -1,4 +1,4 @@
-package lund.gradle.plugins.model
+package com.github.nullstress.model
 
 /**
  * Created with IntelliJ IDEA.
