@@ -1,18 +1,12 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
-    }
+plugins {
+    id 'nu.studer.plugindev' version '1.0.3'
 }
-apply plugin: 'com.jfrog.bintray'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'maven'
 
 group = 'com.github.nullstress'
-version = '1.0.1'
+version = '1.0.3'
 
 def compatibilityVersion = 1.6
 sourceCompatibility = compatibilityVersion
@@ -34,33 +28,30 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
+    gradleVersion = '2.2.1'
+}
+
+plugindev {
+    pluginId = 'com.github.nullstress'
+    pluginImplementationClass 'com.github.nullstress.DependencyAnalysisPlugin'
+    pluginDescription 'Gradle plugin that finds unused dependencies, declared and transitive.'
+    pluginLicenses 'Apache-2.0'
+    pluginTags 'dependencies', 'analysis'
+    authorId 'nullStress'
+    authorName 'Kristian Lund'
+    authorEmail 'klund1986@gmail.com'
+    projectUrl 'https://github.com/NullStress/gradle-dependency-analysis-plugin'
+    projectIssuesUrl 'https://github.com/NullStress/gradle-dependency-analysis-plugin/issues'
+    projectVcsUrl 'https://github.com/NullStress/gradle-dependency-analysis-plugin.git'
+    projectInceptionYear '2014'
+    done()
 }
 
 bintray {
     user = 'nullstress'
     key = '7612fe6ad55731712d1a4cd58af79e8309c0541e'
-
-    configurations = ['archives']
-
-    dryRun = false //Whether to run this as dry-run, without deploying
-    publish = true //If version should be auto published after an upload
     pkg {
         repo = 'plugin'
-        name = 'Dependency-analyzer'
-        desc = 'what a fantastic package indeed!'
-        websiteUrl = 'https://github.com/NullStress/gradle-dependency-analysis-plugin'
-        issueTrackerUrl = 'https://github.com/NullStress/gradle-dependency-analysis-plugin/issues'
-        vcsUrl = 'https://github.com/NullStress/gradle-dependency-analysis-plugin.git'
-        licenses = ['Apache-2.0']
-        labels = ['gradle','dependency']
-        publicDownloadNumbers = true
-
-        //Optional version descriptor
-        version {
-            name = '1.0.0' //Bintray logical version name
-            vcsTag = '1.0.0'
-        }
     }
 }
 

@@ -15,7 +15,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'org.lund.gradle', name: 'DependencyAnalysisPlugin', version: '1.0'
+        classpath group: 'org.lund.gradle', name: 'DependencyAnalysisPlugin', version: '1.0.3'
     }
 }
 
