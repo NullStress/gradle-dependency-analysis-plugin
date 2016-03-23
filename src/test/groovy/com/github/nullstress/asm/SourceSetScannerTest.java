@@ -29,9 +29,9 @@ public class SourceSetScannerTest {
     }
 
     @Test
-    public void sourceSetScannerShouldResolveDirectoriesAndAnalyzeFiles() {
+    public void sourceSetScannerShouldResolveDirectoriesAndAnalyzeFiles() throws Exception {
         SourceSetScanner sourceSetScanner = new SourceSetScanner();
-        File testClassFile = new File("src\\test\\resources");
+        File testClassFile = new File("src/test/resources");
         URI testClassDir = testClassFile.toURI();
         assertEquals(1, sourceSetScanner.analyze(testClassDir).size());
     }
@@ -39,7 +39,7 @@ public class SourceSetScannerTest {
     @Test
     public void sourceSetScannerShouldReturnClassFilesFromJar() throws MalformedURLException {
         SourceSetScanner sourceSetScanner = new SourceSetScanner();
-        File jarFile = new File("src\\test\\resources\\commons-cli-1.0.jar");
+        File jarFile = new File("src/test/resources/commons-cli-1.0.jar");
         assertEquals(20, sourceSetScanner.analyzeJar(jarFile.toURI().toURL()).size());
     }
 }
