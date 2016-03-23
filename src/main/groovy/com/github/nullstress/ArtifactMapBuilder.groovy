@@ -17,7 +17,6 @@ class ArtifactMapBuilder {
 
     Set<String> findArtifactClasses(Artifact artifact) throws IOException {
         File file = artifact.getAbsoluteFile()
-        println "Artifact absolute path: ${file}"
         if (file.name.endsWith('.jar')) {
             def scanner  = new SourceSetScanner()
             return scanner.analyzeJar(file.toURI().toURL())
