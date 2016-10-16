@@ -1,3 +1,7 @@
+# Deprecated
+
+Please use https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Unused-Dependency-Rule
+
 # Gradle-dependency-analysis-plugin
 
 A gradle dependency analysis plugin inspired by the maven dependency plugin and https://gist.github.com/kellyrob99/4334483.
@@ -15,11 +19,19 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'org.lund.gradle', name: 'DependencyAnalysisPlugin', version: '1.0.3'
+        classpath group: 'com.github.nullstress', name: 'DependencyAnalysisPlugin', version: '1.0.3'
     }
 }
 
 apply plugin: 'dependencyAnalysis'
+```
+
+or if you are on gradle 2.1 or newer
+
+```groovy
+plugins {
+    id com.github.nullstress.DependencyAnalysisPlugin version '1.0.3'
+}
 ```
 
 ## Tasks
